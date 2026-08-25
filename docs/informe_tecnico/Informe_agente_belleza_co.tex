@@ -1,0 +1,502 @@
+% =====================================================================
+%  INFORME TÉCNICO: AGENTE DE IA PARA COMPARACIÓN DE MAQUILLAJE
+%  ("Agente Belleza CO") -- Actividad "Un agente de IA para un problema real"
+%  ---------------------------------------------------------------
+%  Programa   : Pregrado en Estadística
+%  Facultad   : Facultad de Estadística, Universidad Santo Tomás
+%  Firma      : Javier Mauricio Sierra
+%  Fecha      : 25 de agosto de 2026
+%
+%  HISTORIAL DE CAMBIOS
+%  --------------------
+%  v1 (25-ago-2026): versión inicial con membrete USTA adaptado del
+%      formato de informes de la Facultad. Contenido verificado contra
+%      el repositorio ustadistica/Agente-de-prueba_2026II (commit efab75a).
+%
+%  COMPILACIÓN
+%  -----------
+%  Compilar dos veces con LuaLaTeX:
+%      lualatex Informe_agente_belleza_co.tex
+%      lualatex Informe_agente_belleza_co.tex
+%
+%  IDENTIDAD VISUAL
+%  ----------------
+%  Igual que el formato base: paleta aproximada azul+dorado USTA y
+%  membrete tipográfico. Si existe escudo_usta.pdf/.png en esta carpeta,
+%  se integra automáticamente al membrete.
+% =====================================================================
+
+\documentclass[11pt,letterpaper]{article}
+
+% ---------- Paquetes básicos -----------------------------------------
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2.5cm,headheight=15pt]{geometry}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{longtable}
+\usetikzlibrary{arrows.meta,positioning}
+
+% columnas p con texto alineado a la izquierda (evita justificación fea)
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+% ---------- COLORES institucionales -----------------------------------
+\definecolor{ustaAzul}{HTML}{003876}
+\definecolor{ustaDorado}{HTML}{FDB913}
+\definecolor{grisTexto}{HTML}{555555}
+
+\usepackage[colorlinks=true,
+            linkcolor=ustaAzul,
+            urlcolor=ustaAzul,
+            citecolor=ustaAzul]{hyperref}
+
+% ---------- Párrafos estilo memorando ---------------------------------
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% ---------- Títulos de sección en azul institucional -------------------
+\titleformat{\section}
+  {\color{ustaAzul}\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{name=\section,numberless}
+  {\color{ustaAzul}\Large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+\titleformat{\subsection}
+  {\color{ustaAzul}\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{name=\subsection,numberless}
+  {\color{ustaAzul}\large\bfseries}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ---------- Encabezado y pie -------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{ustaAzul}\textsc{Universidad Santo Tomás} · Facultad de Estadística}
+\fancyhead[R]{\small\color{grisTexto}Informe técnico · Agente Belleza CO}
+\fancyfoot[C]{\small\color{grisTexto}\thepage}
+\renewcommand{\headrule}{{\color{ustaDorado}\hrule width\headwidth height 0.8pt}}
+
+% ---------- MEMBRETE ----------------------------------------------------
+\newcommand{\fileteInstitucional}{%
+  {\color{ustaAzul}\hrule height 1.6pt}%
+  \vspace{1.6pt}%
+  {\color{ustaDorado}\hrule height 0.7pt}%
+}
+
+\newcommand{\membreteTexto}{%
+  \begin{minipage}{\textwidth}
+    \centering
+    {\color{ustaAzul}\textsc{\LARGE Universidad Santo Tomás}}\\[3pt]
+    {\color{grisTexto}\small Facultad de Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Pregrado en Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Bogotá D.\,C.}
+  \end{minipage}}
+
+\newcommand{\membrete}{%
+  \IfFileExists{escudo_usta.pdf}{%
+    \noindent
+    \begin{minipage}[c]{0.14\textwidth}
+      \includegraphics[width=\linewidth]{escudo_usta.pdf}%
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.84\textwidth}
+      \raggedleft
+      {\color{ustaAzul}\textsc{\LARGE Universidad Santo Tomás}}\\[3pt]
+      {\color{grisTexto}\small Facultad de Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Pregrado en Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Bogotá D.\,C.}
+    \end{minipage}%
+  }{%
+    \IfFileExists{escudo_usta.png}{%
+      \noindent
+      \begin{minipage}[c]{0.14\textwidth}
+        \includegraphics[width=\linewidth]{escudo_usta.png}%
+      \end{minipage}\hfill
+      \begin{minipage}[c]{0.84\textwidth}
+        \raggedleft
+        {\color{ustaAzul}\textsc{\LARGE Universidad Santo Tomás}}\\[3pt]
+        {\color{grisTexto}\small Facultad de Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Pregrado en Estadística \,\textcolor{ustaDorado}{$\bullet$}\, Bogotá D.\,C.}
+      \end{minipage}%
+    }{\membreteTexto}%
+  }%
+  \vspace{8pt}
+  \fileteInstitucional
+}
+
+% ---------- Marcador de información pendiente --------------------------
+\newcommand{\pendiente}[1]{\textcolor{ustaAzul}{\textit{[#1]}}}
+
+\begin{document}
+
+\thispagestyle{plain}
+\membrete
+
+\vspace{14pt}
+\begin{center}
+{\Large\bfseries\color{ustaAzul} Informe técnico del prototipo ``Agente Belleza CO''}\\[6pt]
+{\large Agente de inteligencia artificial para búsqueda, comparación y recomendación\\de compra de productos de maquillaje entre proveedores}\\[4pt]
+{\color{grisTexto}\small Actividad: ``Un agente de IA para un problema real'' · Consultoría · 2026-II}
+\end{center}
+
+\vspace{6pt}
+\begin{tabular}{@{}ll}
+\textbf{\color{ustaAzul}Para:} & Grupo(s) de la actividad de consultoría --- Pregrado en Estadística \\
+\textbf{\color{ustaAzul}De:} & Javier Mauricio Sierra \\
+\textbf{\color{ustaAzul}Fecha:} & 25 de agosto de 2026 \\
+\textbf{\color{ustaAzul}Repositorio:} & \url{https://github.com/ustadistica/Agente-de-prueba_2026II} \\
+\textbf{\color{ustaAzul}Asunto:} & Justificación, objetivos, construcción y funcionamiento del agente \\
+\end{tabular}
+
+\vspace{10pt}
+{\color{ustaDorado}\hrule height 0.7pt}
+\vspace{10pt}
+
+Este informe documenta el prototipo construido como material de referencia de la actividad.
+No es un sustituto del trabajo del grupo: es un caso completo---con sus decisiones explícitas,
+sus pruebas y sus límites declarados---que pueden estudiar, replicar y mejorar. La estructura
+sigue los apartados que la rúbrica evalúa, de modo que sirve también como modelo para redactar
+la propia memoria técnica.
+
+\section*{1. Resumen ejecutivo}
+
+\textbf{Agente Belleza CO} es un agente conversacional con ciclo de decisión propio que ayuda a
+emprendimientos de belleza a decidir \emph{dónde comprar}: compara un mismo producto entre tiendas
+online colombianas (modalidad detal) y catálogos de distribuidores mayoristas (modalidad por
+volumen con cantidades mínimas), calcula el costo total incluyendo envío y recomienda la opción
+más conveniente según los criterios del usuario (presupuesto, unidades objetivo, preferencia de
+modalidad, ciudad de entrega). El prototipo está operativo, versionado en un repositorio público,
+verificado con cuatro pruebas automatizadas del ciclo de decisión y desplegable sin instalación
+mediante Streamlit Community Cloud. Sus límites están declarados en la sección~6: trabaja sobre
+capturas de datos actualizables y no transacciona.
+
+\section*{2. Justificación}
+
+\subsection*{El problema y su contraparte}
+
+Los emprendimientos dedicados a la comercialización de maquillaje compran inventario bajo dos
+regímenes de precio que coexisten en el mercado: el \emph{detal} (una unidad, precio de lista en
+tiendas online) y el \emph{mayorista} (descuento por volumen condicionado a cantidades mínimas
+que cada distribuidor fija a su arbitrio). La decisión de compra exige consolidar información
+dispersa---nombres comerciales inconsistentes entre vendedores, precios distintos por tono o
+presentación, costos de envío variables según ciudad de despacho, stock limitado---y hacerla
+comparable. Esa comparación se hace hoy manualmente.
+
+La contraparte real del proyecto será \pendiente{nombre, rol y negocio}, quien resolvió esta duda
+por última vez \pendiente{frecuencia} y estima dedicarle \pendiente{tiempo por cotización}. La
+línea base se medirá cronometrando ese proceso antes de cualquier uso del agente; la misma métrica
+se repetirá después para cuantificar el aporte (sección~6).
+
+\subsection*{Por qué esto requiere un agente y no un script}
+
+El umbral que separa un agente de una función está en el tipo de decisión involucrada. Aquí hay
+dos que un condicional no puede tomar:
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{Agrupación de equivalentes.} El mismo labial aparece como ``Labial líquido Maybelline
+SuperStay Matte Ink 5 ml tono 80 Ruler'' (Sephora), ``Maybelline Superstay Matte Ink Labial Liquido
+5ml'' (MercadoLibre) o ``Labial SuperStay Matte Ink Maybelline varios tonos'' (distribuidor).
+Decidir que son el mismo producto---y que una paleta genérica ``Naked'' sin marca confirmada
+\emph{no} equivale a una paleta Huda Beauty---es un juicio semántico dependiente del contexto, no
+una coincidencia de cadenas.
+\item \textbf{Recomendación bajo criterios difusos.} Elegir entre pagar menos por unidad comprometiendo
+capital en doce unidades, o pagar más conservando flexibilidad, depende de presupuesto, rotación del
+negocio y tolerancia al riesgo del usuario: criterios que se expresan en lenguaje natural y se ponderan
+distinto en cada consulta.
+\end{enumerate}
+
+Un script determinístico resuelve búsquedas fijas; el agente interpreta la solicitud, decide qué
+consultar, agrupa, calcula, justifica con cifras y deja traza auditable de cada paso. Cuando la
+consulta es ambigua o los datos insuficientes, lo declara en lugar de suponer.
+
+\subsection*{Anclaje disciplinar}
+
+El problema es, en su núcleo, estadístico: \emph{decisión bajo incertidumbre con restricciones}.
+Intervienen estimación de costo unitario efectivo (costo total dividido entre unidades realmente
+obtenidas), comparación de alternativas con atributos múltiples (precio, calidad percibida vía
+calificaciones, tiempo de despacho, riesgo de stock), y sensibilidad de la recomendación a los
+parámetros del usuario (el ejemplo de la sección~5.2 cambia de respuesta si el presupuesto baja de
+\$500.000 a \$400.000). La validación del sistema usa el mismo aparato conceptual del curso:
+casos de prueba con resultados esperados, fallos documentados y métricas comparables contra línea base.
+
+\section*{3. Objetivos y alcance}
+
+\subsection*{Objetivo general}
+
+Construir un agente de IA que automatice la búsqueda, normalización y comparación de productos de
+maquillaje entre proveedores colombianos, generando un comparativo de costos totales y una
+recomendación fundamentada según criterios definidos por el usuario.
+
+\subsection*{Objetivos específicos}
+
+Cada objetivo quedó materializado en un componente verificable del repositorio:
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{Consultar fuentes de datos existentes y accesibles}: listado capturado de tiendas online
+(26 referencias, archivo JSON) y catálogo de distribuidores mayoristas (18 referencias, CSV), ambos
+editables por la contraparte sin tocar código.
+\item \textbf{Identificar productos iguales o similares entre proveedores}: agrupación semántica
+realizada por el LLM dentro de un contrato de salida estructurado.
+\item \textbf{Comparar precios detal vs.\ mayorista y respetar cantidades mínimas}: herramienta
+determinística de cálculo que aplica el precio mayorista solo cuando se alcanza el mínimo exigido.
+\item \textbf{Incorporar atributos relevantes}: marca, presentación, tono, calificación y número de
+reseñas, stock, ciudad de despacho y costo de envío entran al comparativo.
+\item \textbf{Generar tablas comparativas y recomendación fundamentada}: salida JSON validada que
+la interfaz convierte en tabla exportable a CSV y tarjeta de recomendación citando cifras.
+\item \textbf{Permitir filtros del usuario}: presupuesto máximo, unidades objetivo, modalidad
+preferida, marcas de interés y ciudad de entrega, configurables desde la barra lateral.
+\item \textbf{Garantizar operación segura y reproducible}: credenciales solo por variables de entorno
+o secrets del panel de despliegue; README con instalación probada desde cero.
+\end{enumerate}
+
+\subsection*{Alcance acordado (qué sí y qué no)}
+
+\textbf{Sí incluye:} comparación detal/mayorista de productos del catálogo, recomendación con
+justificación cuantitativa, trazabilidad de decisiones, exportación de resultados.
+
+\textbf{No incluye:} compras automáticas ni pagos, navegación web en tiempo real (los datos provienen
+de capturas actualizables; decisión justificada en la Tabla~1), integración con sistemas de venta de
+la contraparte, procesamiento de datos personales de clientes finales.
+
+Con la contraparte definitiva deberá formalizarse este alcance en la constancia del encargo,
+ajustando los términos a lo que ella reconozca como útil.
+
+\section*{4. Construcción del agente}
+
+\subsection*{Arquitectura}
+
+El sistema es un \emph{ciclo único de decisión con herramientas} (no multiagente): un LLM recibe la
+solicitud con sus filtros, decide qué herramientas invocar, observa los resultados, y repite hasta
+poder emitir una respuesta estructurada validada contra un esquema estricto.
+
+\begin{center}
+\begin{tikzpicture}[
+  fuente/.style={rectangle,rounded corners=2pt,draw=ustaAzul,fill=ustaAzul!6,text width=4.2cm,minimum height=1.05cm,align=center,font=\small},
+  nucleo/.style={rectangle,rounded corners=2pt,draw=ustaAzul,line width=1.2pt,fill=white,text width=4.4cm,minimum height=1.15cm,align=center,font=\small\bfseries},
+  etapa/.style={rectangle,rounded corners=2pt,draw=ustaDorado!85!black,line width=1pt,fill=ustaDorado!12,text width=4.4cm,minimum height=0.9cm,align=center,font=\small},
+  flecha/.style={-{Stealth[length=2.5mm]},thick,ustaAzul},
+  flechadoble/.style={{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]},thick,ustaAzul},
+]
+% --- flujo central -------------------------------------------------------
+\node[fuente] (usuario) at (0,5.6) {Usuario\\ \scriptsize consulta + filtros (presupuesto, unidades, modalidad, ciudad)};
+\node[nucleo] (bucle) at (0,3.3) {Bucle de decisión (LLM)\\[-2pt] {\scriptsize\mdseries máx.\ 10 pasos · interpreta, decide, corrige}};
+% --- herramientas (izquierda) ---------------------------------------------
+\node[fuente] (t1) at (-5.7,4.7) {\texttt{buscar\_en\_tiendas}\\ \scriptsize retail · tiendas\_online.json};
+\node[fuente] (t2) at (-5.7,3.3) {\footnotesize\texttt{consultar\_distribuidores}\\ \scriptsize mayoristas · catálogo CSV};
+\node[fuente] (t3) at (-5.7,1.9) {\texttt{calcular\_costo}\\ \scriptsize aritmética determinista};
+% --- salida (derecha) ------------------------------------------------------
+\node[etapa] (json) at (5.7,3.9) {JSON validado (pydantic)\\ \scriptsize grupos + comparativo + recomendación};
+\node[etapa] (ui) at (5.7,2.2) {Interfaz Streamlit\\ \scriptsize trazabilidad, tabla CSV, métricas};
+% --- flechas ---------------------------------------------------------------
+\draw[flecha] (usuario) -- (bucle);
+\draw[flechadoble] (t1.east) -- (bucle.north west);
+\draw[flechadoble] (t2.east) -- (bucle.west);
+\draw[flechadoble] (t3.east) -- (bucle.south west);
+\draw[flecha] (bucle.east) -- (json.west);
+\draw[flecha] (json.south) -- (ui.north);
+\end{tikzpicture}
+
+\vspace{2pt}
+{\small Las flechas dobles indican el ciclo real de invocación: el agente llama a una herramienta,
+observa su resultado y decide el siguiente paso (hasta 10 iteraciones).}
+\end{center}
+
+\subsection*{Decisiones de diseño y alternativas descartadas}
+
+Es la parte más importante del documento: toda decisión técnica relevante, contra qué alternativa se
+descartó y por qué (Tabla~1).
+
+{\small
+\begin{longtable}{@{}L{3.4cm}L{3.9cm}L{7.1cm}@{}}
+\toprule
+\textbf{Decisión} & \textbf{Alternativa descartada} & \textbf{Justificación} \\
+\midrule
+\endhead
+Datos existentes y editables (JSON + CSV capturados) & Scraping en vivo de tiendas &
+Evita fragilidad ante bloqueos anti-bot, permisos de terceros y cambios de maquetado; cumple el
+alcance de ``datos ya existentes''; la contraparte puede actualizarlos sin programar. \\
+\addlinespace
+Ciclo único con tres herramientas & Arquitectura multiagente &
+El problema cabe en un ciclo; agentes múltiples añaden latencia, costo y puntos de falla sin
+beneficio verificable en este alcance. \\
+\addlinespace
+Matching semántico por LLM & Regex o distancia de cadenas &
+Los nombres comerciales varían demasiado; las técnicas léxicas producen falsos positivos graves
+(agrupar una réplica genérica con la marca original) y falsos negativos sistemáticos. \\
+\addlinespace
+Aritmética delegada en herramienta & Cálculos hechos por el LLM &
+Los LLM fallan multiplicaciones encadenadas; \texttt{calcular\_costo} es determinista, auditable y
+reutilizable. El modelo nunca ``inventa'' totales. \\
+\addlinespace
+Contrato JSON validado con pydantic & Texto libre en markdown &
+Permite renderizar tabla y exportar CSV automáticamente; detecta salidas inválidas y las devuelve al
+modelo con corrección guiada; incluye validación cruzada (la opción recomendada debe existir en el
+comparativo). \\
+\addlinespace
+Gemini vía API compatible OpenAI (configurable) & gpt-4o-mini · Ollama local &
+Costo cero en capa gratuita y buena relación calidad/latencia para la demo; el código no cambia entre
+proveedores (solo \texttt{.env}): OpenAI ofrece mejor razonamiento y Ollama privacidad total, a costa
+de pago local o requisitos de RAM. \\
+\bottomrule
+\multicolumn{3}{@{}l@{}}{Tabla 1. Decisiones de diseño del prototipo.}\\
+\end{longtable}
+}
+
+\subsection*{Datos y fuentes}
+
+Dos archivos planos constituyen toda la fuente de verdad del agente, con fecha de captura declarada
+en sus metadatos: \texttt{data/tiendas\_online.json} (Sephora Colombia, Falabella.com, MercadoLibre y
+tienda oficial, con precio detal, calificaciones, stock, ciudad de despacho y envío) y
+\texttt{data/catalogo\_distribuidores.csv} (precio detallista, precio mayorista, cantidad mínima,
+stock máximo y despacho por distribuidor). Los conjuntos incluyen deliberadamente casos difíciles:
+publicaciones agotadas, cajas cerradas sin precio unitário detal, stock insuficiente frente a la
+cantidad mínima, y una publicación genérica sin marca confirmada marcada como posible réplica.
+
+\subsection*{El prompt versionado}
+
+El comportamiento del agente vive en \texttt{prompts/sistema\_v1.txt}, cargado por el código y
+documentado en \texttt{prompts/prompts\_v1.md} con rol, contrato de salida, restricciones y la
+justificación de cada decisión de redacción. Al modificarse, se crea \texttt{sistema\_v2.txt} sin
+sobrescribir el anterior: la iteración queda evidenciada, como exige la actividad. Entre las
+restricciones clave: prohibido inventar productos o precios; obligatoriedad de reformular la búsqueda
+antes de declarar vacío; derivar a \emph{datos insuficientes} lo que no pueda confirmarse; y
+justificar siempre con cifras concretas.
+
+\subsection*{Manejo de errores por tipo}
+
+Tabla~2 resume la política de fallo controlado: ningún error termina en traceback; todos degradan
+informando al usuario o devolviendo control al modelo.
+
+{\small
+\begin{longtable}{@{}L{4.4cm}L{5.0cm}L{5.0cm}@{}}
+\toprule
+\textbf{Tipo de error} & \textbf{Manejo} & \textbf{Resultado observable} \\
+\midrule
+\endhead
+Timeout del proveedor LLM & Reintento automático (hasta 3) & Continúa sin intervención. \\
+\addlinespace
+Límite de peticiones (rate limit) & Retroceso exponencial 2--4--8 s & Mensaje claro si persiste. \\
+\addlinespace
+Credenciales ausentes/rechazadas & Falla inmediata con instrucciones & Guía de configuración, nunca clave en código. \\
+\addlinespace
+Herramienta inexistente o argumentos no parseables & El error se devuelve al modelo como observación & Autocorrección dentro del ciclo. \\
+\addlinespace
+Salida fuera del contrato JSON & Corrección guiada (máx.\ 2 reintentos) & JSON válido o error explicado. \\
+\addlinespace
+Recomendación de opción inexistente & Validación cruzada del esquema & Se exige citar una fila real del comparativo. \\
+\addlinespace
+Fila malformada en el CSV de distribuidores & Validación por campo con identificación de fila y columna & Mensaje accionable de corrección del dato. \\
+\addlinespace
+Consulta que agota los 10 pasos & Parada controlada & Diagnóstico sugerido (simplificar la consulta). \\
+\bottomrule
+\multicolumn{3}{@{}l@{}}{Tabla 2. Errores gestionados por tipo en \texttt{src/llm.py}, \texttt{src/agent.py} y \texttt{src/tools.py}.}\\
+\end{longtable}
+}
+
+\subsection*{Seguridad, credencialidad y reproducibilidad}
+
+Las claves nunca están en el repositorio: localmente en \texttt{.env} (ignorado por git) y en la nube
+en el panel Secrets de Streamlit Cloud; \texttt{.env.example} documenta las variables sin valores.
+Las dependencias están fijadas por versión en \texttt{requirements.txt} y la instalación desde cero
+fue probada en un entorno virtual limpio: clonar, instalar, configurar y ejecutar son cuatro comandos
+documentados en el README. Cada ejecución queda registrada en la interfaz con el detalle de qué
+herramientas se llamaron y con qué argumentos: la decisión es auditable después de tomada.
+
+\section*{5. Funcionamiento}
+
+\subsection*{Flujo de uso}
+
+El usuario describe qué necesita (``necesito 12 labiales SuperStay para reventa''), ajusta filtros en
+la barra lateral y ejecuta. El agente muestra primero su trazabilidad (qué buscó en cada fuente, qué
+calculó), luego las métricas de la opción ganadora, la recomendación justificada con cifras, la tabla
+comparativa descargable, los grupos de equivalentes identificados y las alertas de datos insuficientes.
+En despliegue, la URL pública de Streamlit Community Cloud permite usar todo esto desde el navegador,
+sin instalación.
+
+\subsection*{Sesión documentada (caso CP-01)}
+
+Con la consulta ``Necesito 12 labiales Maybelline SuperStay Matte Ink para reventa'' y criterio de
+menor costo total, el agente agrupa seis referencias de tres fuentes distintas y produce el siguiente
+comparativo (valores reales del repositorio de datos):
+
+\begin{center}
+{\small
+\begin{tabular}{@{}l l r r r l@{}}
+\toprule
+\textbf{Opción} & \textbf{Modalidad} & \textbf{Costo total} & \textbf{Unitario ef.} & \textbf{Mínimo} & \textbf{Despacho} \\
+\midrule
+MercadoLibre (ret-002) & Detal $\times$ 12 & \$656.500 & \$54.708 & 1 & Medellín \\
+Belleza Express (dis-001) & Mayorista $\times$ 12 & \$468.000 & \$39.000 & 12 u. & Bogotá \\
+Belleza Express (dis-002) & Caja cerrada $\times$ 12 & --- & \$38.000 & 12 u. & Bogotá \\
+\bottomrule
+\end{tabular}}\\[4pt]
+{\small Tabla 3. Comparativo resultante del caso CP-01. La caja dis-002 es la más barata por unidad,
+pero su stock (10) no cubre las 12 unidades requeridas: el agente la reporta como limitación en lugar
+de recomendarla.}
+\end{center}
+
+La recomendación emitida fue la compra mayorista a Belleza Express (dis-001): ahorro de \$188.500
+frente al detal en MercadoLibre (28,7\,\% por unidad), advirtiendo el mínimo de 12 unidades y que el
+despacho sale desde Bogotá. Si el presupuesto máximo se ajusta a \$400.000, la misma consulta cambia
+de respuesta: ninguna opción mayorista cabe y el agente debe relegar el detal o reportar que nada
+cumple (caso CP-02). Esta sensibilidad a los parámetros es exactamente el tipo de razonamiento que se
+espera examinar en la sustentación.
+
+\subsection*{Casos de prueba y fallos esperados}
+
+El protocolo completo está en \texttt{docs/casos\_prueba.md}; aquí interesa destacar que incluye
+fallos \emph{por diseño}. CP-03 pide ``paletas Naked baratas'': la única coincidencia es una
+publicación genérica sin marca y con alerta de posible réplica, y el resultado correcto es que el
+agente \emph{no} la agrupe con marcas reales y la derive a datos insuficientes con advertencia de
+riesgo. CP-04 solicita un producto inexistente en las fuentes, donde lo correcto es reformular la
+búsqueda, agotar intentos y declarar que no hay datos---jamás inventarlos. Adicionalmente, cuatro
+pruebas automatizadas del ciclo de decisión (\texttt{tests/test\_bucle\_stub.py}) se ejecutan sin red
+ni API key y verifican: invocación correcta de herramientas, manejo de herramienta inválida,
+recuperación ante salida no parseable y rechazo controlado de un CSV malformado. Estado honesto de la
+verificación: la mecánica está probada con LLM simulado; la ejecución de los casos con un modelo real,
+con registro de salidas, es trabajo pendiente del grupo (sección~6).
+
+\subsection*{Límites conocidos y riesgos}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Caducidad de datos:} los precios reflejan una captura puntual; el mitigador es la
+actualización periódica de \texttt{data/}, registrada con fecha en metadatos.
+\item \textbf{Autenticidad:} el agente no verifica genuinidad de productos; ante publicaciones
+genéricas declara incertidumbre. La decisión final de compra es siempre humana.
+\item \textbf{Calificaciones como proxy de calidad:} provienen de plataformas y pueden sesgar contra
+vendedores nuevos; el comparativo muestra cifras y alternativas, no verdades.
+\item \textbf{Dependencia del proveedor LLM:} si el servicio cae o agota cuota, el sistema informa y
+se detiene; no degrada silenciosamente hacia respuestas inventadas.
+\end{itemize}
+
+\section*{6. Estado actual y trabajo pendiente}
+
+\textbf{Estado:} prototipo funcional versionado (commits \texttt{228c16a} inicial y \texttt{efab75a}
+de soporte de despliegue), auditado con revisión de cinco ejes (corrección, legibilidad, arquitectura,
+seguridad, rendimiento) con hallazgos corregidos, y con ruta de despliegue documentada.
+
+\textbf{Pendiente del grupo:}
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item Formalizar la contraparte real y medir la línea base cronometrada (misma métrica antes/después).
+\item Reemplazar el catálogo de distribuidores por la lista de precios real del negocio cuando esté disponible.
+\item Ejecutar los siete casos de prueba con un modelo real, registrando salidas y desviaciones en la
+tabla de evidencia; completar CP-05 a CP-07.
+\item Realizar la sustentación con el entorno preparado (arranque en menos de 60 segundos) usando este
+documento como guía de estructura para su propia memoria.
+\end{enumerate}
+
+\textbf{Nota metodológica final.} Este prototipo declara su uso de IA de forma transparente: el
+andamiaje del código y de este informe contó con asistencia de IA bajo supervisión directa, las
+decisiones de diseño fueron revisadas y corregidas humanamente (la auditoría detectó y arregló defectos
+reales, documentados en el historial del repositorio), y cada integrante debe poder explicar y modificar
+cualquier parte del sistema. Esa es, precisamente, la honestidad intelectual que la actividad evalúa.
+
+\vspace{16pt}
+Quedo atento a preguntas y a las reuniones de visto bueno de los grupos.
+
+\vspace{20pt}
+\textbf{Javier Mauricio Sierra}\\
+{\color{grisTexto}Facultad de Estadística\\Universidad Santo Tomás}
+
+\vspace{14pt}
+\fileteInstitucional
+
+\end{document}

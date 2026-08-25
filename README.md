@@ -112,7 +112,9 @@ agente-maquillaje/
     ├── casos_prueba.md
     ├── memoria_tecnica_plantilla.md
     ├── constancia_encargo_plantilla.md
-    └── instrucciones_contraparte.md
+    ├── instrucciones_contraparte.md
+    └── informe_tecnico/          # informe academico: justificacion, objetivos,
+                                  # construccion y funcionamiento (PDF + fuente LaTeX)
 ```
 
 ## Actualizar los datos
