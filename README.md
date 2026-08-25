@@ -48,6 +48,31 @@ streamlit run app.py
 Se abre `http://localhost:8501`. Coloca tu consulta, ajusta filtros en la barra lateral y
 pulsa **Ejecutar agente**.
 
+## Despliegue en Streamlit Community Cloud (gratis)
+
+La app puede quedar publicada en internet para que la contraparte la use sin instalar nada:
+
+1. Entra a **https://share.streamlit.io** y inicia sesion con **Sign in with GitHub**
+   (usa una cuenta con acceso al repo `ustadistica/Agente-de-prueba_2026II`).
+2. Si el repo es de una organizacion, autoriza el acceso:
+   GitHub → Settings → Applications → Authorized OAuth Apps → **Streamlit** → Grant.
+3. Pulsa **Create app → Deploy a public app from GitHub**.
+4. Selecciona: Repository `ustadistica/Agente-de-prueba_2026II` · Branch `main` ·
+   Main file `app.py`. (En Advanced settings puedes fijar Python 3.12.)
+5. Antes del primer uso, abre el menu de la app (⋯) → **Settings → Secrets** y pega:
+
+   ```toml
+   OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+   OPENAI_API_KEY = "TU_CLAVE_DE_GEMINI"
+   LLM_MODEL = "gemini-2.0-flash"
+   LLM_TEMPERATURE = "0.2"
+   ```
+
+6. Reboot the app. Listo: la URL publica queda para compartir.
+
+Las credenciales NUNCA van en el repositorio: localmente viven en `.env` y en la nube en
+los Secrets del dashboard (el codigo lee ambos: `src/config.py -> _valor`).
+
 ### Configurar la clave API (sin tocar el codigo)
 
 El cliente usa cualquier endpoint compatible con la API de OpenAI; solo editas `.env`:

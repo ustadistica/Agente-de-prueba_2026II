@@ -1,4 +1,8 @@
-"""Configuracion central. Las credenciales SOLO se leen de variables de entorno (.env)."""
+"""Configuracion central. Las credenciales SOLO se leen de variables de entorno (.env).
+
+En despliegue (Streamlit Community Cloud) no hay archivo .env: las credenciales se
+configuran en el panel Secrets del dashboard y el agente las lee via st.secrets.
+"""
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,11 +23,24 @@ class Config:
     temperatura: float
 
 
+def _valor(nombre: str, por_defecto: str = "") -> str:
+    """Lee una credencial: 1) variable de entorno (.env local), 2) st.secrets (nube)."""
+    valor = os.getenv(nombre, "")
+    if valor:
+        return valor
+    try:
+        import streamlit as st
+
+        return st.secrets.get(nombre, por_defecto)
+    except Exception:
+        return por_defecto
+
+
 def cargar_config() -> Config:
     load_dotenv(BASE_DIR / ".env")
     return Config(
-        base_url=os.getenv("OPENAI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-        modelo=os.getenv("LLM_MODEL", "gemini-2.0-flash"),
-        temperatura=float(os.getenv("LLM_TEMPERATURE", "0.2")),
+        base_url=_valor("OPENAI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
+        api_key=_valor("OPENAI_API_KEY"),
+        modelo=_valor("LLM_MODEL", "gemini-2.0-flash"),
+        temperatura=float(_valor("LLM_TEMPERATURE", "0.2")),
     )
