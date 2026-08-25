@@ -99,7 +99,10 @@ agente-maquillaje/
 │   ├── models.py               # modelos pydantic + contrato de salida del agente
 │   ├── tools.py                # 3 herramientas invocables (datos + aritmetica)
 │   ├── llm.py                  # cliente LLM con reintentos por tipo de error
-│   └── agent.py                # bucle de decision del agente
+│   ├── agent.py                # bucle de decision del agente
+│   └── bitacora.py             # registro automatico de ejecuciones (JSONL + metricas)
+├── bitacora/
+│   └── ejecuciones.jsonl       # historial de ejecuciones (evidencia versionada)
 ├── data/
 │   ├── tiendas_online.json     # listado capturado de tiendas retail (actualizable)
 │   └── catalogo_distribuidores.csv  # precios detal/mayorista de distribuidores
@@ -107,9 +110,11 @@ agente-maquillaje/
 │   ├── sistema_v1.txt          # prompt del sistema (versionado, lo carga agent.py)
 │   └── prompts_v1.md           # documentacion de versiones e iteraciones
 ├── tests/
-│   └── test_bucle_stub.py      # prueba del bucle con LLM simulado (sin red ni clave)
+│   ├── test_bucle_stub.py      # prueba del bucle con LLM simulado (sin red ni clave)
+│   └── test_bitacora.py        # prueba del registro de ejecuciones
 └── docs/
     ├── casos_prueba.md
+    ├── bitacora_proyecto.md    # bitacora del equipo: hitos, linea base, entradas
     ├── memoria_tecnica_plantilla.md
     ├── constancia_encargo_plantilla.md
     ├── instrucciones_contraparte.md
@@ -125,10 +130,28 @@ Los archivos de `data/` son la fuente de verdad del agente (captura del 20-08-20
   cantidad minima, despacho, envio).
 Ninguna credencial de terceros es necesaria: son datos ya existentes y accesibles.
 
+## Bitacora: validar progreso y ejecucion
+
+Dos registros complementarios:
+
+1. **Bitacora de ejecucion (automatica).** Cada corrida del agente —exitosa o fallida—
+   queda registrada en `bitacora/ejecuciones.jsonl`: fecha, consulta, filtros, modelo,
+   pasos y herramientas invocadas, duracion, estado y error clasificado por tipo. La
+   seccion "📓 Bitacora" de la app muestra metricas en vivo (tasa de exito, duracion
+   promedio, errores por tipo), el historial y exportacion a CSV. El archivo se versiona
+   en el repositorio como evidencia de uso real del agente. Nota: en despliegue en la
+   nube el persistente aplica a la sesion actual; el historial completo vive en la
+   maquina local donde se ejecuta.
+2. **Bitacora de proyecto (`docs/bitacora_proyecto.md`).** Registro del equipo por sesion
+   de trabajo, con checklist de hitos mapeado a la rubrica, registro de linea base vs
+   resultados y plantilla de entradas (incluye las entradas reales del prototipo como
+   referencia).
+
 ## Pruebas
 
 ```bash
-python3 tests/test_bucle_stub.py   # bucle completo con LLM simulado (no gasta tokens)
+python3 tests/test_bucle_stub.py    # bucle completo con LLM simulado (no gasta tokens)
+python3 tests/test_bitacora.py      # registro, lectura tolerante y metricas
 ```
 
 Casos manuales (incluido uno donde el agente DEBE fallar): ver `docs/casos_prueba.md`.

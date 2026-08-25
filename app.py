@@ -4,10 +4,12 @@ Ejecutar desde la raiz del proyecto:
     streamlit run app.py
 """
 import json
+import time
 
 import pandas as pd
 import streamlit as st
 
+from src import bitacora
 from src.agent import AgenteMaquillaje
 from src.config import cargar_config
 from src.llm import ErrorLLM
@@ -106,7 +108,16 @@ if ejecutar:
 
     with st.spinner("El agente esta consultando fuentes, agrupando equivalentes y calculando costos..."):
         agente = AgenteMaquillaje(config)
+        t0 = time.time()
         resultado = agente.ejecutar(consulta, filtros)
+        duracion = time.time() - t0
+
+    # Bitacora: TODA ejecucion queda registrada (exitosa o fallida) como evidencia
+    registro = bitacora.registrar_ejecucion(
+        consulta=consulta, filtros=filtros, resultado=resultado,
+        modelo=config.modelo, duracion_seg=duracion,
+    )
+    st.session_state.setdefault("bitacora_sesion", []).insert(0, registro)
 
     with st.expander("🔍 Decisiones del agente (trazabilidad)", expanded=False):
         for paso in resultado.pasos:
@@ -186,3 +197,57 @@ if ejecutar:
 
     with st.expander("Ver JSON crudo de la respuesta"):
         st.code(json.dumps(salida.model_dump(), ensure_ascii=False, indent=2), language="json")
+
+# ---------------------------------------------------------------------------
+# Bitacora de ejecucion (siempre visible al final de la pagina)
+# ---------------------------------------------------------------------------
+st.divider()
+with st.expander("📓 Bitácora de ejecución del agente", expanded=False):
+    registros_archivo = bitacora.leer_ejecuciones(limite=200)
+    ids_archivo = {r["id"] for r in registros_archivo}
+    registros_sesion = [r for r in st.session_state.get("bitacora_sesion", []) if r["id"] not in ids_archivo]
+    registros = registros_sesion + registros_archivo
+
+    if not registros:
+        st.info(
+            "Aún no hay ejecuciones registradas. Cada vez que pulses **Ejecutar agente** "
+            "(exitosa o fallida) quedará registrada aquí y en `bitacora/ejecuciones.jsonl`."
+        )
+    else:
+        stats = bitacora.resumen(registros)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Ejecuciones registradas", stats["total"])
+        c2.metric("Tasa de éxito", stats["tasa_exito"])
+        c3.metric("Duración promedio", f"{stats['duracion_promedio_seg']} s")
+        c4.metric("Ejecuciones con error", stats["errores"])
+
+        if stats["errores_por_tipo"]:
+            detalle = ", ".join(f"{tipo}: {n}" for tipo, n in stats["errores_por_tipo"].items())
+            st.caption(f"Errores por tipo → {detalle}")
+        if stats["herramientas_mas_usadas"]:
+            detalle = ", ".join(f"{h} ({n})" for h, n in stats["herramientas_mas_usadas"].items())
+            st.caption(f"Herramientas más usadas → {detalle}")
+
+        tabla = pd.DataFrame(registros)
+        columnas = ["fecha_hora", "estado", "modelo", "duracion_seg", "num_pasos",
+                    "herramientas_invocadas", "consulta", "tipo_error"]
+        tabla = tabla[[c for c in columnas if c in tabla.columns]].copy()
+        if "herramientas_invocadas" in tabla.columns:
+            tabla["herramientas_invocadas"] = tabla["herramientas_invocadas"].map(lambda h: ", ".join(h or []))
+        tabla = tabla.rename(columns={
+            "fecha_hora": "Fecha y hora", "estado": "Estado", "modelo": "Modelo",
+            "duracion_seg": "Duración (s)", "num_pasos": "Pasos",
+            "herramientas_invocadas": "Herramientas", "consulta": "Consulta",
+            "tipo_error": "Tipo de error",
+        })
+        st.dataframe(tabla, use_container_width=True, height=280)
+        st.download_button(
+            "⬇️ Descargar bitácora (CSV)",
+            data=tabla.to_csv(index=False).encode("utf-8"),
+            file_name="bitacora_ejecuciones.csv",
+            mime="text/csv",
+        )
+        st.caption(
+            "El registro persiste en `bitacora/ejecuciones.jsonl` en ejecución local; "
+            "en la nube se conserva el histórico de la sesión actual."
+        )
