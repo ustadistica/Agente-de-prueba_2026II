@@ -450,9 +450,50 @@ riesgo. CP-04 solicita un producto inexistente en las fuentes, donde lo correcto
 búsqueda, agotar intentos y declarar que no hay datos---jamás inventarlos. Adicionalmente, cuatro
 pruebas automatizadas del ciclo de decisión (\texttt{tests/test\_bucle\_stub.py}) se ejecutan sin red
 ni API key y verifican: invocación correcta de herramientas, manejo de herramienta inválida,
-recuperación ante salida no parseable y rechazo controlado de un CSV malformado. Estado honesto de la
+recuperación ante salida no parseable y rechazo controlado de un CSV malformado; el módulo de
+bitácora tiene pruebas propias (\texttt{tests/test\_bitacora.py}: registro, lectura tolerante a
+corrupción, métricas y clasificación de errores). Estado honesto de la
 verificación: la mecánica está probada con LLM simulado; la ejecución de los casos con un modelo real,
 con registro de salidas, es trabajo pendiente del grupo (sección~6).
+
+\subsection*{Bitácora de ejecución}
+
+Toda ejecución del agente---exitosa o fallida---queda registrada automáticamente como evidencia
+auditable en \path{bitacora/ejecuciones.jsonl} (una línea JSON por corrida), gracias a
+\path{src/bitacora.py}. Registrar también los fracasos es deliberado: sin errores en la muestra no
+hay análisis de robustez posible. La Tabla~4 resume qué se guarda en cada registro; la interfaz
+dedica a este histórico una sección con métricas en vivo y exportación a CSV.
+
+\begin{center}
+{\small
+\begin{tabular}{@{}L{4.4cm}L{10.4cm}@{}}
+\toprule
+\textbf{Campo del registro} & \textbf{Contenido} \\
+\midrule
+\texttt{id} · \texttt{fecha\_hora} & Identificador único y marca de tiempo de la ejecución. \\
+\texttt{consulta} · \texttt{filtros} & Qué pidió el usuario y con qué configuración. \\
+\texttt{modelo} · \texttt{duracion\_seg} & Proveedor/motor usado y tiempo total de respuesta. \\
+\texttt{estado} · \texttt{tipo\_error} & \emph{ok}/\emph{error} y error clasificado por tipo
+(timeout, rate limit, credenciales, máx.\ pasos, contrato JSON, conexión). \\
+\texttt{num\_pasos} · \texttt{pasos\_por\_tipo} & Longitud del ciclo y composición (llamadas a
+herramientas, errores de herramienta, correcciones, cierre). \\
+\texttt{herramientas\_invocadas} & Secuencia de herramientas usadas (quién fue consultado y en qué
+orden). \\
+\texttt{grupos / comparativo / recomendación} & Resultado obtenido: equivalentes identificados,
+opciones comparadas y opción ganadora. \\
+\texttt{pasos} & Traza completa de la decisión (truncada por registro). \\
+\bottomrule
+\end{tabular}}\\[4pt]
+{\small Tabla 4. Campos de cada ejecución registrada en la bitácora automática.}
+\end{center}
+
+Sobre el histórico, la app calcula en vivo las métricas de validación: total de ejecuciones, tasa de
+éxito, duración promedio, errores agrupados por tipo y herramientas más usadas. Complementariamente,
+\texttt{docs/bitacora\_proyecto.md} registra la bitácora del equipo (checklist de catorce hitos
+mapeados a la rúbrica, medición de línea base contra resultados con la misma métrica, y entradas por
+sesión con decisiones y evidencia). La interpretación esperada del monitoreo: tasa de éxito estable y
+alta, errores concentrados en los casos difíciles documentados (CP-03/CP-04) y duración en el orden
+de segundos; una degradación sostenida señala datos desactualizados o problemas con el proveedor LLM.
 
 \subsection*{Límites conocidos y riesgos}
 
@@ -469,9 +510,11 @@ se detiene; no degrada silenciosamente hacia respuestas inventadas.
 
 \section*{6. Estado actual y trabajo pendiente}
 
-\textbf{Estado:} prototipo funcional versionado (commits \texttt{228c16a} inicial y \texttt{efab75a}
-de soporte de despliegue), auditado con revisión de cinco ejes (corrección, legibilidad, arquitectura,
-seguridad, rendimiento) con hallazgos corregidos, y con ruta de despliegue documentada.
+\textbf{Estado:} prototipo funcional versionado (commits \texttt{228c16a} inicial, \texttt{efab75a}
+de soporte de despliegue y \texttt{c38dcbb} de bitácora), auditado con revisión de cinco ejes
+(corrección, legibilidad, arquitectura, seguridad, rendimiento) con hallazgos corregidos, con ruta de
+despliegue documentada y con bitácora automática de ejecuciones para validar el uso real del agente
+(seis pruebas automatizadas en total, todas en verde).
 
 \textbf{Pendiente del grupo:}
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
